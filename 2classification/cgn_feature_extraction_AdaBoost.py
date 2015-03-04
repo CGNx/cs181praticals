@@ -416,11 +416,28 @@ pd.DataFrame(pred, testdf.index).to_csv(filename, index_label = 'Id', header = [
 # <markdowncell>
 
 # ###Trying on the subset of data for only the top 4
+# ##INTERESTINGLY - this did not perform better when I used optimal parameters. This means adaboosting is good enough to do well on this with optimal parameters without considering only top 4 classes.
 
 # <codecell>
 
 result_random_reducedX = random_search.fit(reducedX, reducedt)
 result_random_reducedX.best_estimator_
+
+# <codecell>
+
+clf = AdaBoostClassifier(algorithm='SAMME',
+          base_estimator=DecisionTreeClassifier(compute_importances=None, criterion='gini',
+            max_depth=4, max_features=None, max_leaf_nodes=None,
+            min_density=None, min_samples_leaf=1, min_samples_split=2,
+            random_state=None, splitter='best'),
+          learning_rate=1.4000000000000001, n_estimators=670,
+          random_state=None)
+pred = classifier.fit(reducedX, reducedt).predict(testdf)
+
+# <codecell>
+
+filename = "submission9.csv"
+pd.DataFrame(pred, testdf.index).to_csv(filename, index_label = 'Id', header = ['Prediction'])
 
 # <codecell>
 

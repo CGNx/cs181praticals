@@ -18,6 +18,9 @@ from scipy import sparse
 
 import util
 import pandas as pd
+from sklearn import cross_validation
+
+from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 
 # <markdowncell>
 
@@ -92,16 +95,18 @@ def createDesignMatrix(readPath = "train/"):
 # <codecell>
 
 ##REMOVE ALL FEATURES IN TRAINING DATA THAT ARE NOT IN TEST DATA (AND VICE VERSA IF NECESSARY)
-for column in testdf.columns:
-    if column not in df.columns:
+for column in X.columns:
+    if column not in X.columns:
         del testdf[column]
         
-for column in df.columns:
+for column in X.columns:
     if column not in testdf.columns:
-        del df[column]        
+        del X[column]        
 
 # <codecell>
 
+originalX = X
+originalT = t
 len(testdf.columns)
 
 # <markdowncell>
@@ -131,6 +136,7 @@ bdt_discrete = AdaBoostClassifier(
     algorithm="SAMME")
 
 X, t = createDesignMatrix(readPath = "train/")
+testdf = createDesignMatrix(readPath= "test/")
 
 classif_discrete = bdt_discrete.fit(X, t)
 discrete_predicted = classif_discrete.predict(testdf) #predict on test values, not on X
@@ -138,13 +144,13 @@ sum(pd.Series(discrete_predicted) & t) / len(testdf)
 
 # <markdowncell>
 
-# ##Trying a normalized matrix as the input
+# ##Trying a normalized matrix as the input - RESULTS MUCH WORSE -> ACCURACY DOWN TO 0.40474 FROM .66 (i.e. don't normalize like the code in the below cell block)
 
 # <codecell>
 
 #normalizedX = (X - X.mean()) / X.std()
 normalizedX = X / X.sum()
-classif_discrete = bdt_discrete.fit(X, t)
+classif_discrete = bdt_discrete.fit(normalizedX, t)
 discrete_predicted = classif_discrete.predict(testdf) #predict on test values, not on X
 sum(pd.Series(discrete_predicted) & t) / len(testdf)
 
@@ -154,7 +160,7 @@ sum(pd.Series(discrete_predicted) & t) / len(testdf)
 
 # <codecell>
 
-filename = "submission3.csv"
+filename = "submission4.csv"
 pd.DataFrame(discrete_predicted, testdf.index).to_csv(filename, index_label = 'Id', header = ['Prediction'])
 
 # <markdowncell>
@@ -256,11 +262,165 @@ plt.show()
 
 # <codecell>
 
-lol = pd.DataFrame([[1,2,3], [4, 8, 12]])
+t.value_counts() / len(t)
 
 # <codecell>
 
-lol / lol.sum()
+t.indices = X.index
+
+# <codecell>
+
+X['t'] = t.values
+
+# <codecell>
+
+len(t.values)
+
+# <codecell>
+
+len(X[(X.t == 8) | (X.t == 10) | (X.t == 12) | (X.t == 0)]) / len(X)
+
+# <markdowncell>
+
+# ##Consider 0.8188593648736228 percent of the data = only three of the classes
+
+# <codecell>
+
+X['t'] = t.values
+reducedX = X[(X.t == 8) | (X.t == 10) | (X.t == 12)]
+reducedt = reducedX['t']
+del reducedX['t']
+del X['t']
+
+# <codecell>
+
+classif_discrete = bdt_discrete.fit(reducedX, reducedt)
+discrete_predicted = classif_discrete.predict(testdf) #predict on test values, not on X
+
+# <codecell>
+
+filename = "submission5.csv"
+pd.DataFrame(discrete_predicted, testdf.index).to_csv(filename, index_label = 'Id', header = ['Prediction'])
+
+# <markdowncell>
+
+# ##Consider 0.856 percent of the data = only 4 of the classes ---> THIS PERFORMED WORSE than 3!!!
+
+# <codecell>
+
+X['t'] = t.values
+reducedX = X[(X.t == 8) | (X.t == 10) | (X.t == 12) | (X.t == 0)]
+reducedt = reducedX['t']
+del reducedX['t']
+del X['t']
+
+# <codecell>
+
+classif_discrete = bdt_discrete.fit(reducedX, reducedt)
+discrete_predicted = classif_discrete.predict(testdf) #predict on test values, not on X
+
+# <codecell>
+
+filename = "submission6.csv"
+pd.DataFrame(discrete_predicted, testdf.index).to_csv(filename, index_label = 'Id', header = ['Prediction'])
+
+# <markdowncell>
+
+# ##Optimizing Paramters - grid_search includes cross_validation within grid search
+
+# <codecell>
+
+kf = cross_validation.KFold(4, n_folds=5)
+for train_index, test_index in kf:
+    print("TRAIN:", train_index, "TEST:", test_index)
+    X_train, X_test = X[train_index], X[test_index]
+    y_train, y_test = y[train_index], y[test_index]
+
+# <codecell>
+
+parameters = {'base_estimator':(DecisionTreeClassifier(max_depth=2), DecisionTreeClassifier(max_depth=4)), 
+              'n_estimators':[50, 100, 500, 1000], 'learning_rate': [.05, .1, 1, 5], 'algorithm': ["SAMME", "SAMME.R"]}
+bdt = AdaBoostClassifier(
+    DecisionTreeClassifier(max_depth=2),
+    n_estimators=600,
+    learning_rate=1.5,
+    algorithm="SAMME.R")
+
+clf2 = grid_search.GridSearchCV(estimator = bdt, param_grid = parameters, cv=5, verbose = 2)
+
+# <codecell>
+
+result = clf2.fit(reducedX, reducedt)
+
+# <codecell>
+
+print (clf2.best_estimator_)
+classifier = AdaBoostClassifier(
+    DecisionTreeClassifier(max_depth=4),
+    n_estimators=100,
+    learning_rate=1,
+    algorithm="SAMME")
+pred = classifier.fit(reducedX, reducedt).predict(testdf)
+
+# <codecell>
+
+filename = "submission7.csv"
+pd.DataFrame(pred, testdf.index).to_csv(filename, index_label = 'Id', header = ['Prediction'])
+
+# <markdowncell>
+
+# ##Randomized Optimizing Paramters - grid_search includes cross_validation within grid search
+
+# <codecell>
+
+# specify parameters and distributions to sample from
+param_dist = {'base_estimator':(DecisionTreeClassifier(max_depth=2), DecisionTreeClassifier(max_depth=4), DecisionTreeClassifier(max_depth=6), DecisionTreeClassifier(max_depth=8)), 
+              'n_estimators':np.arange(10, 1000, 10),
+              'learning_rate': np.arange(.1, 5, .1),
+              'algorithm': ["SAMME", "SAMME.R"]}
+
+# run randomized search
+n_iter_search = 500
+clf = AdaBoostClassifier(
+    DecisionTreeClassifier(max_depth=4),
+    n_estimators=100,
+    learning_rate=1,
+    algorithm="SAMME")
+random_search = RandomizedSearchCV(clf, param_distributions=param_dist,
+                                   n_iter=n_iter_search, )
+
+# <codecell>
+
+result_random = random_search.fit(X, t)
+
+# <codecell>
+
+result_random.best_estimator_
+
+# <codecell>
+
+clf = AdaBoostClassifier(algorithm='SAMME.R',
+          base_estimator=DecisionTreeClassifier(compute_importances=None, criterion='gini',
+            max_depth=8, max_features=None, max_leaf_nodes=None,
+            min_density=None, min_samples_leaf=1, min_samples_split=2,
+            random_state=None, splitter='best'),
+          learning_rate=0.40000000000000002, n_estimators=480,
+          random_state=None)
+pred = classifier.fit(X, t).predict(testdf)
+
+# <codecell>
+
+filename = "submission8.csv"
+pd.DataFrame(pred, testdf.index).to_csv(filename, index_label = 'Id', header = ['Prediction'])
+
+# <markdowncell>
+
+# ###Trying on the subset of data for only the top 4
+
+# <codecell>
+
+result_random_reducedX = random_search.fit(reducedX, reducedt)
+result_random_reducedX.best_estimator_
 
 # <codecell>
 

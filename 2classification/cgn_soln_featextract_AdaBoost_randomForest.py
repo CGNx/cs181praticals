@@ -439,6 +439,66 @@ pred = classifier.fit(reducedX, reducedt).predict(testdf)
 filename = "submission9.csv"
 pd.DataFrame(pred, testdf.index).to_csv(filename, index_label = 'Id', header = ['Prediction'])
 
+# <markdowncell>
+
+# ##Trying Random Forests (everything above, just with Random Forest Classifier)
+
+# <codecell>
+
+from sklearn.ensemble import RandomForestClassifier
+
+# <codecell>
+
+# specify parameters and distributions to sample from
+param_dist = {'criterion':['gini','entropy'],
+                'n_estimators': np.arange(30, 1000, 5)}
+
+# run randomized search
+n_iter_search = 50
+clf = RandomForestClassifier(verbose = 1,
+                             max_features=None,
+                             oob_score=True,
+                             bootstrap = True)
+random_search_forest = RandomizedSearchCV(clf, param_distributions=param_dist,
+                                   n_iter=n_iter_search, )
+
+# <codecell>
+
+result_random_search_rf = random_search_forest.fit(X, t)
+
+# <codecell>
+
+print (result_random_search_rf.best_estimator_)
+
+# <codecell>
+
+clf = RandomForestClassifier(bootstrap=True, compute_importances=None,
+            criterion='gini', max_depth=None, max_features=None,
+            max_leaf_nodes=None, min_density=None, min_samples_leaf=1,
+            min_samples_split=2, n_estimators=730, n_jobs=1,
+            oob_score=True, random_state=None, verbose=1)
+
+# <codecell>
+
+result_random_search_rf.grid_scores_
+
+# <codecell>
+
+pred = clf.fit(X, t)
+
+# <codecell>
+
+pred = pred.predict(testdf)
+
+# <codecell>
+
+filename = "submission11.csv"
+pd.DataFrame(pred, testdf.index).to_csv(filename, index_label = 'Id', header = ['Prediction'])
+
+# <codecell>
+
+pred
+
 # <codecell>
 
 

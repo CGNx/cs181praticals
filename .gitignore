@@ -1,5 +1,3 @@
-2classification/test.tar.gz
-2classification/train.tar.gz
-train/
-test/
-2classification/*
+2classification/
+.DS_Store
+3clustering/

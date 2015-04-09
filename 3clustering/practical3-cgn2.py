@@ -17,17 +17,17 @@ test = pd.read_csv('data/test.csv.gz', compression = 'gzip')
 train = pd.read_csv('data/train.csv.gz', compression = 'gzip')
 
 
-# In[54]:
+# In[3]:
 
 profiles.head()
 
 
-# In[53]:
+# In[4]:
 
 test.head()
 
 
-# In[3]:
+# In[5]:
 
 data = pd.merge(left = train, right = profiles, how = 'left', on ='user')
 
@@ -169,53 +169,46 @@ sub3.to_csv('submission3.csv', index = False)
 
 # ##Create a BETTER input matrix for our analysis
 
-# In[57]:
+# In[6]:
 
 gb = train.groupby('user')
 
 
-# In[59]:
-
-for i, j in gb:
-    print(j)
-    break
-
-
-# In[60]:
+# In[7]:
 
 z = np.zeros((len(train.user.unique()), len(train.artist.unique())))
 
 
-# In[61]:
+# In[8]:
 
 X = pd.DataFrame(z)
 
 
-# In[62]:
+# In[9]:
 
 X.index = train.user.unique()
 
 
-# In[63]:
+# In[10]:
 
 X.columns = train.artist.unique()
 
 
-# In[ ]:
+# In[11]:
 
 for i,df in gb:
     for ind, row in df.iterrows():
         X[row.artist][row.user] = row.plays
 
 
-# In[82]:
+# In[12]:
 
 X.head()
 
 
 # ##Normalize rows of X so that number of plays doesn't affect user comparisons (however keep X) around and call this new normalized matrix Xnorm. If Xnorm doesn't yield good results, try X with min/diff similarity metric
 
-# In[87]:
+# In[13]:
 
 Xnorm = X.div(X.sum(axis=1), axis=0)
 Xnorm.head()
@@ -223,30 +216,20 @@ Xnorm.head()
 
 # ##Run PCA to reduce dimensionality of our matrix
 
-# In[ ]:
+# In[17]:
 
-pi
+X.to_hdf('X.h5','df',mode='w')
 
 
 # In[106]:
 
 from sklearn.decomposition import PCA
-pca = PCA(n_components='mle') #too slow
+pca = PCA(n_components='mle')
 
 
 # In[ ]:
 
 pca.fit(Xnorm)
-
-
-# In[1]:
-
-2+2
-
-
-# In[2]:
-
-X.head()
 
 
 # In[ ]:

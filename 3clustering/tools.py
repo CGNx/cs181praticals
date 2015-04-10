@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[10]:
+# In[67]:
 
 get_ipython().magic('matplotlib inline')
 
@@ -15,6 +15,9 @@ import matplotlib.cm as cm # colors
 import matplotlib
 import datetime as dt
 from numpy import random
+
+import pycountry
+import unicodedata
 
 
 # In[25]:
@@ -379,5 +382,72 @@ def generateRandomClusters(n = 100, seperation = 6, uniformity = 1, gridSize = 5
 
 # In[ ]:
 
+def countrymap(country = None):
+    cmap = buildcountrymap()
+    if country == None:
+        return cmap
+    else:
+        return cmap[country]
 
+
+# In[66]:
+
+def buildcountrymap():
+    locmap = {unicodedata.normalize('NFKD', i.name).encode('ascii','ignore').decode('utf-8') : 
+        int(i.numeric) for i in list(pycountry.countries)}
+    locmap['Venezuela'] = locmap['Venezuela, Bolivarian Republic of']
+    locmap['Bolivia'] = locmap['Bolivia, Plurinational State of']
+    locmap['Macedonia'] = locmap['Macedonia, Republic of']
+    locmap['Libyan Arab Jamahiriya'] = locmap['Libya']
+    locmap['Taiwan'] = locmap['Taiwan, Province of China']
+    locmap['Moldova'] = locmap['Moldova, Republic of']
+    locmap['Antigua'] = locmap['Antigua and Barbuda']
+    locmap['Barbuda'] = locmap['Antigua and Barbuda']
+    locmap['Bonaire'] = locmap['Bonaire, Sint Eustatius and Saba']
+    locmap['Bosnia'] = locmap['Bosnia and Herzegovina']
+    locmap['Herzegovina'] = locmap['Bosnia and Herzegovina']
+    locmap['Cocos Islands'] = locmap['Cocos (Keeling) Islands']
+    locmap['Congo'] = locmap['Congo, The Democratic Republic of the']
+    locmap['Falkland Islands'] = locmap['Falkland Islands (Malvinas)']
+    locmap['Iran'] = locmap['Iran, Islamic Republic of']
+    locmap['Holy See'] = locmap['Holy See (Vatican City State)']
+    locmap['Vatican City State'] = locmap['Holy See (Vatican City State)']
+    locmap['Heard Island'] = locmap['Heard Island and McDonald Islands']
+    locmap['McDonald Islands'] = locmap['Heard Island and McDonald Islands']
+    locmap['Korea'] = locmap['Korea, Democratic People\'s Republic of']
+    locmap['Lao'] = locmap['Lao People\'s Democratic Republic']
+    locmap['Micronesia'] = locmap['Micronesia, Federated States of']
+    locmap['Palestine'] = locmap['Palestine, State of']
+    locmap['Saint Helena'] = locmap['Saint Helena, Ascension and Tristan da Cunha']
+    locmap['Saint Martin'] = locmap['Saint Martin (French part)']
+    locmap['Saint Kitts'] = locmap['Saint Kitts and Nevis']
+    locmap['Nevis'] = locmap['Saint Kitts and Nevis']
+    locmap['Saint Pierre'] = locmap['Saint Pierre and Miquelon']
+    locmap['Miquelon'] = locmap['Saint Pierre and Miquelon']
+    locmap['Saint Vincent'] = locmap['Saint Vincent and the Grenadines']
+    locmap['Grenadines'] = locmap['Saint Vincent and the Grenadines']
+    locmap['Sao Tome'] = locmap['Sao Tome and Principe']
+    locmap['Principe'] = locmap['Sao Tome and Principe']
+    locmap['Sint Maarten'] = locmap['Sint Maarten (Dutch part)']
+    locmap['South Georgia'] = locmap['South Georgia and the South Sandwich Islands']
+    locmap['South Sandwich Islands'] = locmap['South Georgia and the South Sandwich Islands']
+    locmap['Svalbard'] = locmap['Svalbard and Jan Mayen']
+    locmap['Jan Mayen'] = locmap['Svalbard and Jan Mayen']
+    locmap['Tanzania'] = locmap['Tanzania, United Republic of']
+    locmap['Trinidad'] = locmap['Trinidad and Tobago']
+    locmap['Tobago'] = locmap['Trinidad and Tobago']
+    locmap['Turks'] = locmap['Turks and Caicos Islands']
+    locmap['Caicos Islands'] = locmap['Turks and Caicos Islands']
+    locmap['Wallis'] = locmap['Wallis and Futuna']
+    locmap['Futuna'] = locmap['Wallis and Futuna']
+    locmap['British Virgin Islands'] = locmap['Virgin Islands, British']
+    locmap['U.S. Virgin Islands'] = locmap['Virgin Islands, U.S.']
+    locmap['Virgin Islands'] = locmap['Virgin Islands, U.S.']
+    locmap['Heard Island and Mcdonald Islands'] = locmap['Heard Island and McDonald Islands']
+    locmap['Netherlands Antilles'] = locmap['Netherlands']
+    locmap['Palestinian Territory, Occupied'] = locmap['Palestine']
+    locmap['Congo, the Democratic Republic of the'] = locmap['Congo']
+    locmap['Cote D\'Ivoire'] = locmap['Cote d\'Ivoire']
+    locmap['Virgin Islands, U.s.'] = locmap['Virgin Islands, U.S.']
+    return locmap
 

@@ -37,8 +37,8 @@ class SwingyMonkey:
         self.tree_mean     = 5
         self.tree_gap      = 200
         self.tree_offset   = -300
-        self.edge_penalty  = -10.0
-        self.tree_penalty  = -5.0
+        self.edge_penalty  = -20.0
+        self.tree_penalty  = -10.0
         self.tree_reward   = 1.0
 
         # Store arguments.
@@ -207,7 +207,7 @@ class SwingyMonkey:
 
         # Render the score
         score_text = self.font.render("Score: %d" % (self.score), 1, (230, 40, 40))
-	self.screen.blit(score_text, score_text.get_rect())
+        self.screen.blit(score_text, score_text.get_rect())
 
         if self.text is not None:
             text = self.font.render(self.text, 1, (230, 40, 40))

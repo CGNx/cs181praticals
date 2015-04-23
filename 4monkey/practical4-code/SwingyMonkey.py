@@ -37,8 +37,8 @@ class SwingyMonkey:
         self.tree_mean     = 5
         self.tree_gap      = 200
         self.tree_offset   = -300
-        self.edge_penalty  = -20.0
-        self.tree_penalty  = -10.0
+        self.edge_penalty  = -25.0
+        self.tree_penalty  = -15.
         self.tree_reward   = 1.0
 
         # Store arguments.

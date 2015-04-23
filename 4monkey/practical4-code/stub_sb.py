@@ -141,6 +141,8 @@ buckets = 4
 
 learner = Learner(alpha, gamma, epsilon, 0, buckets)
 
+scores = []
+
 for ii in xrange(iters):
     
     # Make a new monkey object.
@@ -160,6 +162,7 @@ for ii in xrange(iters):
     # For different runs and maybe get things like avg score
     # Instead of max score. I was just pumped we were getting
     # So high to I decided to print the max out :)
+    scores.append(swing.get_state()['score'])
     if swing.get_state()['score'] > learner.max_score:
         learner.max_score = swing.get_state()['score']
 
@@ -168,6 +171,7 @@ for ii in xrange(iters):
 
 # Print max score and enjoy :D
 print learner.max_score
+print float(np.sum(scores))/len(scores)
 
 
 

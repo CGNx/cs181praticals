@@ -2,3 +2,7 @@
 .DS_Store
 3clustering/data/*
 3clustering/submissions/*
+3clustering/X.csv.gz
+3clustering/Xnorm.csv.gz
+3clustering/submission_final.csv
+3clustering/user_median.csv.gz

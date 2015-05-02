@@ -1,4 +1,4 @@
-import numpy.random as npr
+#import numpy.random as npr
 import numpy as np
 import sys
 import random
@@ -33,6 +33,9 @@ class Learner:
 
         # Q function, initialized to init over actions x states (2 x buckets^6)
         self.Q = [[self.init for a in range(len(self.act_list))] for s in range(self.buckets**6)]
+
+        # N function, initialized to init over actions x states (2 x buckets^6)
+        self.N = [[self.init+1 for a in range(len(self.act_list))] for s in range(self.buckets**6)]
 
     def discreteState(self, state):
         # Velocity range = [-50, 30]
@@ -102,12 +105,12 @@ class Learner:
             new_state  = self.discreteState(state)
             new_action = self.chooseAction(new_state, self.Q)
 
-            # SARSA, On-Policy TD Control (http://en.wikipedia.org/wiki/SARSA)
+            # Q Learning
             self.Q[self.last_state][action] = self.Q[self.last_state][action] \
-                                                   + self.alpha(self.numEpochs+1)*(self.last_reward + \
+                                                   + self.alpha(self.N[self.last_state][action])*(self.last_reward + \
                                                                  self.gamma*self.Q[new_state][new_action] - \
                                                                  self.Q[self.last_state][action])
-                
+            self.N[self.last_state][action] += 1    
             # Update all vals
             self.last_action = new_action
             self.last_state  = new_state

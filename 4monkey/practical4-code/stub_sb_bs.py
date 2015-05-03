@@ -32,14 +32,14 @@ class Learner:
 
         # List of actions
         self.act_list = [0, 1]
-
         if self.Q == []:
             # Q function, initialized to init over actions x states (2 x buckets^6)
-            self.Q = [[self.init for a in range(len(self.act_list))] for s in range(self.buckets**3)]
+            self.Q = [[self.init for a in range(len(self.act_list))] for s in range(10**2)]
+            print self.buckets**3
 
         if self.N == []:
-            # N function, initialized to init over actions x states (2 x buckets^6)
-            self.N = [[self.init+1 for a in range(len(self.act_list))] for s in range(self.buckets**3)]
+            # N function
+            self.N = [[1 for a in range(len(self.act_list))] for s in range(10**2)]
 
     def discreteState(self, state):
         # Velocity range = [-50, 30]
@@ -54,17 +54,33 @@ class Learner:
         # Commenting out dist and vel literally put us
         # from maxing at 12 to maxing at 60
         
+        # Scrapped velocity and distance
         #ds.append(int((state['tree']['dist'])*(self.buckets-1)/sw + 1))
-        ds.append(int((state['tree']['top'])*(self.buckets-1)/sh + 1))
-        #ds.append(int((state['tree']['bot'])*(self.buckets-1)/sh + 1))
         #ds.append(int(((state['monkey']['vel'])+50)/(80/self.buckets)))
-        ds.append(int((state['monkey']['top'])*(self.buckets-1)/sh + 1))
-        ds.append(int((state['monkey']['bot'])*(self.buckets-1)/sh + 1))
+
+        #ds.append(int((state['tree']['top'])*(self.buckets-1)/sh + 1))
+        #ds.append(int((state['tree']['bot'])*(self.buckets-1)/sh + 1))
+
+        #print state['tree']['top'], int(state['tree']['top']*(self.buckets-1)/(140) + 1)-7
+        ds.append(int(state['tree']['top']*(self.buckets-1)/(sh-300) + 1)-7)
+        #ds.append(int(state['tree']['top']*(self.buckets-1)/(140) + 1)-7)
+
+        #ds.append(int((state['monkey']['top'])*(self.buckets-1)/sh + 1))
+        #ds.append(int((state['monkey']['bot'])*(self.buckets-1)/sh + 1))
+        
+        monkeyAvg = (state['monkey']['top'] + state['monkey']['bot'])/2
+        #print state['monkey']['top'], state['monkey']['bot'], monkeyAvg, int(monkeyAvg*(self.buckets-1)/(sh) + 1)
+        # sh - (0, 450)
+        ds.append(int(monkeyAvg*(self.buckets-1)/(sh) + 1))
+
+        #ds = [treeTop, treeBot, monkTop, monkBot] -> [treeAvg, monkeyAvg]
+        #ds = [7, 5, 8, 4] -> [0-3, 0-3]
+        #ret = 7 + 5*6 + 8*36 + 4*216 -> 
         
         # Conver state to unique decimal representation
         ret = 0        
         for i in range(len(ds)):
-            ret += ds[i]*(self.buckets**i)
+            ret += ds[i]*(10**i)
         return ret
 
     def reset(self):
@@ -80,8 +96,12 @@ class Learner:
         best_Q = -float("inf")
         
         # In the case of epsilon, return a random action
-        if (random.random() < self.eps(self.numIters+1)):
+        if (random.random() < self.eps(self.numEpochs+1)):
             action = random.choice(self.act_list)
+            #if random.random() < .8:
+                #return 0
+            #else:
+                #return 1
             return action
         
         else:
@@ -138,57 +158,60 @@ class Learner:
 # And alpha is 1/epoch minimized at .1 (we always wanna learn)
 iters = 100
 epsilon = lambda(x): 1./x
+#epsilon = lambda(x): 1
 alpha = lambda(x): min(.1, 1./x)
 
 # Best discount factor I found, though not numerically verified
 gamma = .95
 
 # Best buckets I found, though not tested
-buckets = 4
-avgScore = 0
+buckets = 6
 
-for zzzz in range(1):
-    newQ = np.load('Q_iter.pkl')
-    newN = np.load('N_iter.pkl')
-    learner = Learner(alpha, gamma, epsilon, 0, buckets, Q = newQ, N = newN)
-    print learner.N
-    break
-    scores = []
+#restoredQ = np.load('Q2.pkl')
+#restoredN = np.load('N2.pkl')
+restoredQ = []
+restoredN = []
 
-    for ii in xrange(iters):
-        
-        # Make a new monkey object.
-        swing = SwingyMonkey(sound=False,            # Don't play sounds.
-                             text="Epoch %d" % (ii), # Display the epoch on screen.
-                             tick_length=1,          # Make game ticks super fast.
-                             action_callback=learner.action_callback,
-                             reward_callback=learner.reward_callback)
+learner = Learner(alpha, gamma, epsilon, 0, buckets, Q = restoredQ, N = restoredN)
 
-        # Loop until you hit something.
-        while swing.game_loop():
-            pass
+scores = []
 
-        # Just a very basic tracker of max score
-        # Ideally for a good writeup, we should plot
-        # Individual rewards and cumulative rewards over time
-        # For different runs and maybe get things like avg score
-        # Instead of max score. I was just pumped we were getting
-        # So high to I decided to print the max out :)
-        scores.append(swing.get_state()['score'])
-        if swing.get_state()['score'] > learner.max_score:
-            learner.max_score = swing.get_state()['score']
+for ii in xrange(iters):
+    
+    # Make a new monkey object.
+    swing = SwingyMonkey(sound=False,            # Don't play sounds.
+                         text="Epoch %d" % (ii), # Display the epoch on screen.
+                         tick_length=1,          # Make game ticks super fast.
+                         action_callback=learner.action_callback,
+                         reward_callback=learner.reward_callback)
 
-        # Reset the state of the learner.
-        learner.reset()
+    # Loop until you hit something.
+    while swing.game_loop():
+        pass
 
-    # Print max score and enjoy :D
-    print learner.max_score
-    print float(np.sum(scores))/len(scores)
-    avgScore = float(np.sum(scores))/len(scores)
-    savedQ = np.array(learner.Q)
-    savedQ.dump('Q_iter.pkl')
-    savedN = np.array(learner.N)
-    savedN.dump('N_iter.pkl')
+    # Just a very basic tracker of max score
+    # Ideally for a good writeup, we should plot
+    # Individual rewards and cumulative rewards over time
+    # For different runs and maybe get things like avg score
+    # Instead of max score. I was just pumped we were getting
+    # So high to I decided to print the max out :)
+    scores.append(swing.get_state()['score'])
+    if swing.get_state()['score'] > learner.max_score:
+        learner.max_score = swing.get_state()['score']
+
+    # Reset the state of the learner.
+    learner.reset()
+
+# Print max score and enjoy :D
+print learner.max_score
+print float(np.sum(scores))/len(scores)
+savedQ = np.array(learner.Q)
+savedQ.dump('Q_bs.pkl')
+savedN = np.array(learner.N)
+savedN.dump('N_bs.pkl')
+for i in range(len(learner.N)):
+    if learner.N[i] != [1, 1]:
+        print i, learner.N[i]
 
 
     
